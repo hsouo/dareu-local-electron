@@ -24,6 +24,8 @@
     "app:edge": "node src/server.js --edge-app",
     "smoke": "node scripts/launch-electron.js",
     "pack": "node scripts/pack.js",
+    "zip": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/zip-dist.ps1",
+    "release": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/release.ps1",
     "icon": "python scripts/make-icon.py",
     "verify:offline": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/verify-offline.ps1",
     "verify:app": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/verify-app.ps1",

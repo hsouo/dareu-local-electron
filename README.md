@@ -9,6 +9,8 @@
 - 出厂即离线：`fetch / XHR / WebSocket / window.open` 全部就地短路，主进程再挂一层请求防火墙
 - 自带窗口与端口管理：关窗即释放端口，端口被占自动顺延，重复启动自动复用
 - 打包产物 `DAREU-Driver.exe`（win32-x64，含图标与文件属性）
+- **懒人入口**：[Releases](https://github.com/hsouo/dareu-local-electron/releases) 里有打好的 `DAREU-Driver-win32-x64-v1.0.0.zip`
+  （解压到可写目录，插设备，双击 exe）；仍需要自备 `webapp/` 才能自己重新打包
 
 - `webapp/` 目录是官方网页驱动的静态资源（第三方所有），本仓库**不附带也不分发**它；
   运行前需要把它放到 `webapp/` 下，见 [先决条件：获取 webapp](#先决条件获取-webapp)。其余 30 多个文件都是本项目写的。
@@ -126,7 +128,12 @@ src/
   test-protocol.js   真机协议自测：在 vm 里加载官方协议层，对真机跑只读命令
 electron/main.cjs    Electron 主进程（内嵌同一个 server + 外部请求防火墙）
 scripts/pack.js      打包 exe（直接复制 Electron 发行版 + 换图标/属性 + 生成 asar）
+scripts/make-icon.py 生成 build/icon.png 与 icon.ico（Pillow）
+scripts/zip-dist.ps1 把 dist 产物压成 release\*.zip（顺带清掉运行期状态）+ 写 .sha256
+scripts/release.ps1  建 tag / Release 并上传附件（token 走 git credential fill）
 tools/               真机核对与验证脚本（HID 能力、外链审计、端口释放、无头验证）
+build/               图标源文件
+CHANGELOG.md         版本记录
 webapp/              需自备：官方网页驱动的静态资源（本仓库不附带，见「先决条件」）
 ```
 
@@ -329,6 +336,17 @@ cmd /c "set ELECTRON_RUN_AS_NODE=&& set DAREU_SMOKE_MS=42000&& DAREU-Driver.exe"
 
 > 在脚本里启动 Electron 应用前必须清掉 `ELECTRON_RUN_AS_NODE`，否则 exe 会当成纯 Node 静默退出。
 
+发布链（本仓库自己用的那套）：
+
+```powershell
+npm run zip      # scripts/zip-dist.ps1 → release\DAREU-Driver-win32-x64-v<版本>.zip + .sha256
+npm run release  # scripts/release.ps1 → 打 tag、建 Release、传附件（token 取自 git credential fill）
+```
+
+> 传 Release 附件时别用 `curl --data-binary`：这台机器上 curl 8.19（直连 / HTTP 代理 / SOCKS5 三种走法都试过）
+> 一律被 `uploads.github.com` 以 HTTP 400「Whoa there!」拒掉。用
+> `Invoke-RestMethod -InFile` + `[Net.ServicePointManager]::Expect100Continue = $false` 就正常（127MB / 178s）。
+
 ---
 
 ## 已知限制
@@ -350,5 +368,7 @@ cmd /c "set ELECTRON_RUN_AS_NODE=&& set DAREU_SMOKE_MS=42000&& DAREU-Driver.exe"
 - 本仓库只包含本项目自己编写的代码，**不含也不分发**官方网页驱动的前端与协议资源；
   `webapp/` 需要你从自己有权使用的来源获取后放入。本项目仅用于在本机与自己拥有的设备互操作、
   离线可用性验证，不用于分发或商业用途。
+- Release 附件是可直接运行的成品，它的 `resources/app.asar` 里必然包含上述前端与协议脚本；
+  请只当作个人本机备份使用，不要二次分发或用于商业用途。
 - 修改设备配置有风险（尤其写 Flash / 校准类页面），请先用自己的设备试；本项目不提供任何保证。
 - 本项目不上传任何数据；所有报文只在本机 `127.0.0.1` 与设备之间流动。
