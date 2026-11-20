@@ -1,0 +1,20 @@
+# 依赖与产物
+node_modules/
+dist/
+
+# 官方网页驱动的静态资源：第三方资源，本仓库不分发，需自备（见 README「先决条件：获取 webapp」）
+webapp/
+
+# 运行期数据（授权记忆、端口文件、集合缓存、日志、无头测试的 Chrome 配置）
+state/
+logs/
+*.log
+
+# 压缩 JS 的美化副本，只是阅读辅助（花括号有丢失，别依赖）
+reference/
+
+# 编辑器/系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

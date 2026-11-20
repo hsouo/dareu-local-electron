@@ -1,0 +1,19 @@
+# 统一换行：文本按各自原有内容存，检出时跟随平台
+* text=auto
+
+# 二进制（webapp 里的图片/字体、图标）
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.icns binary
+*.otf binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
+*.node binary
+
+# 这些脚本按原样检出，避免 PowerShell 5.1 读到 BOM/奇怪换行
+*.ps1 -text
+*.py text

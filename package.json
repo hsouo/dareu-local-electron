@@ -1,0 +1,56 @@
+{
+  "name": "dareu-local-electron",
+  "version": "0.1.0",
+  "private": true,
+  "description": "达尔优（DAREU）网页驱动的本地离线复现：Electron 外壳 + node-hid 顶替 WebHID，官方前端零改动",
+  "productName": "DAREU 本地驱动",
+  "author": "hsouo（非官方）",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hsouo/dareu-local-electron.git"
+  },
+  "main": "electron/main.cjs",
+  "type": "commonjs",
+  "bin": {
+    "dareu": "src/cli.js"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "stop": "node src/cli.js stop",
+    "port": "node src/cli.js port",
+    "open": "node src/server.js --open",
+    "app": "node scripts/launch-electron.js",
+    "app:edge": "node src/server.js --edge-app",
+    "smoke": "node scripts/launch-electron.js",
+    "pack": "node scripts/pack.js",
+    "icon": "python scripts/make-icon.py",
+    "verify:offline": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/verify-offline.ps1",
+    "verify:app": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/verify-app.ps1",
+    "cli": "node src/cli.js",
+    "list": "node src/cli.js list",
+    "probe": "node src/cli.js probe",
+    "watch": "node src/cli.js watch 10",
+    "test": "node src/selftest.js",
+    "check": "node src/selftest.js && node src/test-shim.js",
+    "test:shim": "node src/test-shim.js",
+    "test:live": "node src/test-protocol.js",
+    "test:protocol": "node src/test-protocol.js",
+    "selftest": "node src/selftest.js",
+    "caps": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/hid-caps.ps1",
+    "beautify": "node src/beautify.js"
+  },
+  "dependencies": {
+    "node-hid": "^3.4.0"
+  },
+  "//": "运行时只依赖 node-hid（自带 N-API 预编译，含 win32-x64/arm64，无需 electron-rebuild）。渲染层与守护进程之间用 HTTP + SSE，不引入 ws。Electron 外壳可选：本机制品下载 TLS 失败时装不上，用 npm run app:edge 以 Edge --app 模式启动，效果等价。",
+  "optionalDependencies": {
+    "electron": "^37.2.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "rcedit": "^5.0.2"
+  }
+}

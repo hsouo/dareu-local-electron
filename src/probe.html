@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>dareu-probe</title>
+<style>body{font:13px/1.5 Consolas,monospace;margin:16px;white-space:pre-wrap}</style>
+</head>
+<body>
+<div>WebHID 垫片真机探针（不修改 webapp，只走 index.html 用的同一套调用）</div>
+<pre id="out">RUNNING</pre>
+<script src="/hid-shim.js"></script>
+<script>
+// 与 webapp/js/global.js 的 DEVICE_FILTERS / EXCLUSION_FILTERS 一致
+var FILTERS = [
+  { usagePage: 0xFF02, usage: 0x02 },
+  { usagePage: 0xFF01, usage: 0x00 },
+  { usagePage: 0x0C00 & 0x0C, usage: 0x01 },
+  { usagePage: 0xFF40, usage: 0x01 },
+  { usagePage: 0xFF04, usage: 0x02 }
+];
+var EXCLUSION = [
+  { vendorId: 9741, productId: 69761, usagePage: 0xFF02, usage: 0x02 },
+  { vendorId: 9741, productId: 69745, usagePage: 0xFF02, usage: 0x02 }
+];
+function put(t) { document.getElementById('out').textContent += '\n' + t; }
+(async function () {
+  var res = { ok: false, steps: [] };
+  function step(n, v) { res.steps.push(n + '=' + v); put(n + ': ' + v); }
+  try {
+    step('inert-navigator-hid', typeof navigator.hid);
+    var before = await navigator.hid.getDevices();
+    step('getDevices-before', before.length);
+
+    var got = await navigator.hid.requestDevice({ filters: FILTERS, exclusionFilters: EXCLUSION });
+    step('requestDevice', got.length);
+    res.devices = got.map(function (d) {
+      return {
+        vid: '0x' + d.vendorId.toString(16),
+        pid: '0x' + d.productId.toString(16),
+        name: d.productName,
+        serial: d.serialNumber,
+        collections: d.collections.length,
+        keys: d.collections.map(function (c) {
+          return '0x' + c.usagePage.toString(16) + ':0x' + c.usage.toString(16) +
+            (c.inputReports && c.inputReports.length ? '/in' + c.inputReports[0] : '') +
+            (c.outputReports && c.outputReports.length ? '/out' + c.outputReports[0] : '') +
+            (c.featureReports && c.featureReports.length ? '/feat' + c.featureReports[0] : '');
+        })
+      };
+    });
+
+    var dev = got[0];
+    if (dev) {
+      await dev.open();
+      step('opened', dev.opened);
+      var seen = null;
+      dev.oninputreport = function (ev) {
+        seen = { reportId: ev.reportId, byteLength: ev.data.byteLength, bufferLen: ev.data.buffer.byteLength, b0: ev.data.getUint8(0) };
+      };
+      // 只读命令：匠盟接收器 GetDongleFwVersion 首字节 0x08 报文（ReportId=8，16 字节）
+      try {
+        var w = new Uint8Array([8, 0x01, 0x02, 0x00, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x55]);
+        await dev.sendReport(8, w);
+        step('sendReport', 'ok');
+      } catch (e) { step('sendReport', 'throw:' + e.message); }
+      await new Promise(function (r) { setTimeout(r, 600); });
+      res.inputreport = seen;
+      step('inputreport', seen ? JSON.stringify(seen) : 'none(600ms)');
+      await dev.close();
+      step('closed', dev.opened === false);
+    }
+    var after = await navigator.hid.getDevices();
+    step('getDevices-after', after.length);
+    res.ok = true;
+  } catch (e) {
+    put('ERROR: ' + (e && e.stack || e));
+    res.error = String(e && e.message || e);
+  }
+  document.getElementById('out').textContent += '\nPROBE_RESULT ' + JSON.stringify(res);
+  document.title = 'done';
+})();
+</script>
+</body>
+</html>

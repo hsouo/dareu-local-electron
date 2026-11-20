@@ -1,0 +1,96 @@
+{
+  "$comment": [
+    "collections 合成表。hidapi 在 Windows 上不暴露 Report Descriptor，而 webapp 的",
+    "ParseDevices / ArrangeHistoryDevice 完全依赖 WebHID 的 device.collections 特征识别固件家族：",
+    "  - index.html:235  (0xFF00,0x01) input 0x04",
+    "  - index.html:245  (0xFFA0,0x01) / (0xFF1C,0x92) input 0x08",
+    "  - index.html:300  (0x0C,0x01) feature 0x0A(海思1.2+) / 0x07(自研蓝牙) / 0x00(海思旧版)",
+    "  - index.html:306  (0xFF04,0x02) feature 0x08(群峰)",
+    "  - index.html:313  (0xFF02,0x02) input 0x08(匠盟)",
+    "  - index.html:298  单设备分支要求 collections.length >= 4；index.html:766 匠盟要求 >= 5",
+    "因此每个 HID 接口(顶层集合)除自身条目外，还要声明它在真实描述符里嵌套的子集合数量(nested)，",
+    "否则上面的 length 阈值判断不成立。nested 只被 length 阈值用到，不参与任何报文解析。",
+    "usagePage/usage 支持 '0xFF02' 字符串或十进制数字。role: command=命令通道 notify=通知通道。",
+    "byPid 用 4 位十六进制 PID 覆盖 family，或对具体接口补充真实 collections（可用 Chrome 抓取，见 README）。"
+  ],
+  "vendorIds": [9741],
+  "granularity": "path",
+  "families": {
+    "TG": {
+      "label": "自研固件 (FwType 0/6/7)",
+      "fwTypes": [0, 6, 7],
+      "reportId": 0,
+      "size": 64,
+      "collections": {
+        "0x0C:0x01": { "role": "command", "input": [], "output": [], "feature": [0, 7], "size": 64 },
+        "0xFF00:0x01": { "role": "notify", "input": [4], "output": [4], "feature": [], "size": 64 },
+        "0xFF02:0x02": { "role": "aux", "input": [4], "output": [], "feature": [], "size": 64 },
+        "0xFF01:0x00": { "role": "aux", "input": [1], "output": [], "feature": [], "size": 64 },
+        "0xFF40:0x01": { "role": "aux", "input": [0], "output": [0], "feature": [], "size": 64 }
+      }
+    },
+    "TGHS": {
+      "label": "自研固件海思方案 (FwType 1)",
+      "fwTypes": [1],
+      "reportId": 10,
+      "size": 64,
+      "collections": {
+        "0x0C:0x01": { "role": "command", "input": [], "output": [], "feature": [10], "size": 64, "nestedCount": 4 },
+        "0xFF00:0x01": { "role": "notify", "input": [4], "output": [4], "feature": [], "size": 64, "nestedCount": 3 },
+        "0xFF02:0x02": { "role": "aux", "input": [8], "output": [8], "feature": [], "size": 16, "nestedCount": 3 },
+        "0xFF04:0x02": { "role": "aux", "input": [], "output": [], "feature": [8], "size": 16 }
+      }
+    },
+    "JM": {
+      "label": "匠盟固件 (FwType 2)",
+      "fwTypes": [2],
+      "reportId": 8,
+      "size": 16,
+      "$measured": "PID 1227 (TM290F 接收器) 用 tools/hid-caps.ps1 实测：0xFF02:0x02 in/out=17B(含 Report ID)，0xFF04:0x02 feature=8B，0xFF03/0xFF05 input=8B，0x0C:0x01 input=3B；每个接口 NumberLinkCollectionNodes=1（不需要 nestedCount）",
+      "collections": {
+        "0xFF02:0x02": { "role": "command", "input": [8], "output": [8], "feature": [], "size": 16, "inLen": 17, "outLen": 17 },
+        "0xFF04:0x02": { "role": "aux", "input": [], "output": [], "feature": [8], "size": 16, "featLen": 8 },
+        "0xFF03:0x00": { "role": "aux", "input": [], "output": [], "feature": [], "size": 16, "inLen": 8 },
+        "0xFF05:0x00": { "role": "aux", "input": [], "output": [], "feature": [], "size": 16, "inLen": 8 },
+        "0x0C:0x01": { "role": "aux", "input": [], "output": [], "feature": [], "size": 64, "inLen": 3 },
+        "0x01:0x80": { "role": "aux", "input": [], "output": [], "feature": [], "size": 64, "inLen": 2 }
+      }
+    },
+    "QF": {
+      "label": "群峰固件 (FwType 3)",
+      "fwTypes": [3],
+      "reportId": 8,
+      "size": 16,
+      "collections": {
+        "0xFF04:0x02": { "role": "command", "input": [8], "output": [8], "feature": [8], "size": 16, "nestedCount": 4 },
+        "0xFF02:0x02": { "role": "aux", "input": [8], "output": [8], "feature": [], "size": 16, "nestedCount": 4 }
+      }
+    },
+    "OHID": {
+      "label": "合盈 OHID 固件 (FwType 4)",
+      "fwTypes": [4],
+      "reportId": 0,
+      "size": 16,
+      "collections": {
+        "0xFF1C:0x92": { "role": "command", "input": [8], "output": [8], "feature": [], "size": 16, "nestedCount": 4 },
+        "0xFFA0:0x01": { "role": "notify", "input": [0], "output": [0], "feature": [], "size": 16 }
+      }
+    },
+    "HY": {
+      "label": "合盈第一版固件 (FwType 5)",
+      "fwTypes": [5],
+      "reportId": 0,
+      "size": 16,
+      "collections": {
+        "0xFFA0:0x01": { "role": "command", "input": [0], "output": [0], "feature": [], "size": 16, "nestedCount": 4 }
+      }
+    }
+  },
+  "byPid": {
+    "1227": {
+      "family": "JM",
+      "$comment": "现场实机：DAREU Receiver TM290F (VID 0x260D / PID 0x1227)，2.4G 接收器 Type=2 FwType=2"
+    }
+  },
+  "featureReportProbeLengths": [65, 64, 33, 17, 9]
+}
