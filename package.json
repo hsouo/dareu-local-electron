@@ -1,6 +1,6 @@
 {
   "name": "dareu-local-electron",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "达尔优（DAREU）网页驱动的本地离线复现：Electron 外壳 + node-hid 顶替 WebHID，官方前端零改动",
   "productName": "DAREU 本地驱动",
@@ -51,6 +51,7 @@
     "node": ">=18"
   },
   "devDependencies": {
+    "@electron/asar": "^4.3.2",
     "rcedit": "^5.0.2"
   }
 }

@@ -1,6 +1,7 @@
 # 依赖与产物
 node_modules/
 dist/
+release/
 
 # 官方网页驱动的静态资源：第三方资源，本仓库不分发，需自备（见 README「先决条件：获取 webapp」）
 webapp/
